@@ -126,6 +126,105 @@
             top: 50%;
             transform: translate(-50%, -50%);
         }
+        
+        /* 移动端响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                padding: 10px;
+                box-sizing: border-box;
+                overflow: auto;
+            }
+            
+            .container {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .game-area {
+                width: 100%;
+                max-width: 600px;
+                height: 250px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+            
+            .controls {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+                margin: 15px 0;
+            }
+            
+            button {
+                margin: 5px;
+            }
+            
+            .game-modes {
+                flex-wrap: wrap;
+                gap: 5px;
+                margin-bottom: 15px;
+            }
+            
+            .info {
+                font-size: 0.95rem;
+                line-height: 1.5;
+                padding: 12px;
+                margin: 15px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-area {
+                height: 200px;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .target {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+                margin: 3px;
+            }
+            
+            .mode-btn {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            
+            .info {
+                padding: 10px;
+                font-size: 0.85rem;
+                line-height: 1.4;
+            }
+            
+            .timer, .score {
+                font-size: 16px;
+                margin: 8px 0;
+            }
+            
+            .focus-point {
+                width: 15px;
+                height: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -186,6 +285,9 @@
             color: "专注于变化的颜色，让眼睛在不同色彩中休息。"
         };
         
+        // 检测是否为移动设备
+        const isMobile = window.innerWidth <= 768;
+        
         // 设置游戏模式
         modeBtns.forEach(btn => {
             btn.addEventListener('click', function() {
@@ -199,6 +301,16 @@
                 resetGame();
             });
         });
+        
+        // 添加触摸事件支持
+        if ('ontouchstart' in window) {
+            document.addEventListener('touchstart', function(e) {
+                // 不阻止所有触摸事件，只阻止游戏区域内的双击缩放
+                if (e.target.closest('.game-area')) {
+                    e.preventDefault();
+                }
+            }, {passive: false});
+        }
         
         // 开始游戏
         startBtn.addEventListener('click', function() {
@@ -346,11 +458,15 @@
             target.style.top = '50%';
             target.style.transform = 'translate(-50%, -50%)';
             
-            target.addEventListener('click', function() {
+            // 添加点击和触摸事件
+            const handleClick = function() {
                 score += 5;
                 scoreDisplay.textContent = score;
                 this.style.backgroundColor = getRandomColor();
-            });
+            };
+            
+            target.addEventListener('click', handleClick);
+            target.addEventListener('touchstart', handleClick);
             
             gameArea.appendChild(target);
             animateTarget();
@@ -374,35 +490,48 @@
             gameArea.appendChild(target);
             gameArea.appendChild(focusPoint);
             
-            target.addEventListener('click', function() {
+            // 添加点击和触摸事件
+            const handleTargetClick = function() {
                 score += 5;
                 scoreDisplay.textContent = score;
-            });
+            };
             
-            focusPoint.addEventListener('click', function() {
+            const handleFocusClick = function() {
                 score += 3;
                 scoreDisplay.textContent = score;
-            });
+            };
+            
+            target.addEventListener('click', handleTargetClick);
+            target.addEventListener('touchstart', handleTargetClick);
+            
+            focusPoint.addEventListener('click', handleFocusClick);
+            focusPoint.addEventListener('touchstart', handleFocusClick);
             
             animateTargetAndFocus();
         }
         
         // 颜色模式初始化
         function initColorMode() {
+            const size = isMobile ? '80px' : '100px';
+            
             target = document.createElement('div');
             target.className = 'target pulse';
-            target.style.width = '100px';
-            target.style.height = '100px';
+            target.style.width = size;
+            target.style.height = size;
             target.style.left = '50%';
             target.style.top = '50%';
             target.style.transform = 'translate(-50%, -50%)';
             target.style.backgroundColor = getRandomColor();
             
-            target.addEventListener('click', function() {
+            // 添加点击和触摸事件
+            const handleClick = function() {
                 score += 2;
                 scoreDisplay.textContent = score;
                 this.style.backgroundColor = getRandomColor();
-            });
+            };
+            
+            target.addEventListener('click', handleClick);
+            target.addEventListener('touchstart', handleClick);
             
             gameArea.appendChild(target);
             
@@ -417,10 +546,11 @@
         
         // 追踪模式动画
         function animateTarget() {
-            const maxX = gameArea.clientWidth - 40;
-            const maxY = gameArea.clientHeight - 40;
-            let dx = 2;
-            let dy = 2;
+            const targetSize = isMobile ? 30 : 40;
+            const maxX = gameArea.clientWidth - targetSize;
+            const maxY = gameArea.clientHeight - targetSize;
+            let dx = isMobile ? 1.5 : 2;
+            let dy = isMobile ? 1.5 : 2;
             let x = parseInt(target.style.left);
             let y = parseInt(target.style.top);
             
@@ -444,10 +574,11 @@
         
         // 焦点模式动画
         function animateTargetAndFocus() {
-            const maxX = gameArea.clientWidth - 40;
-            const maxY = gameArea.clientHeight - 40;
-            let dx = 1.5;
-            let dy = 1.5;
+            const targetSize = isMobile ? 30 : 40;
+            const maxX = gameArea.clientWidth - targetSize;
+            const maxY = gameArea.clientHeight - targetSize;
+            let dx = isMobile ? 1 : 1.5;
+            let dy = isMobile ? 1 : 1.5;
             let x = parseInt(target.style.left);
             let y = parseInt(target.style.top);
             let isNear = true;
@@ -485,6 +616,22 @@
             if (!gameRunning || gamePaused) return;
             target.style.backgroundColor = getRandomColor();
         }
+        
+        // 窗口大小变化时调整游戏区域
+        window.addEventListener('resize', function() {
+            if (target) {
+                // 调整目标大小
+                if (currentMode === 'color') {
+                    const size = window.innerWidth <= 768 ? '80px' : '100px';
+                    target.style.width = size;
+                    target.style.height = size;
+                } else {
+                    const size = window.innerWidth <= 480 ? '30px' : '40px';
+                    target.style.width = size;
+                    target.style.height = size;
+                }
+            }
+        });
     </script>
 </body>
 </html> 
